@@ -1,0 +1,13 @@
+[build]
+entry = "src/main.py"
+name = "smake"
+onefile = true
+clean = true
+
+[paths]
+hidden_imports = []
+
+[output]
+dist_dir = "bin"
+work_dir = "build"
+spec_dir = "build"
