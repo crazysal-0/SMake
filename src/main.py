@@ -1,148 +1,214 @@
+import glob
 import os
+import subprocess
 import sys
 import tomllib as toml
-import subprocess
 
 
-# Load config
 try:
     with open("SMake.toml", "rb") as f:
-        CONFIG = toml.load(f)
-
+        config = toml.load(f)
 except FileNotFoundError:
     print("Error: SMake.toml not found.")
     sys.exit(1)
 
-except PermissionError:
-    print("Error: No permission to read SMake.toml.")
+
+output = config.get("output", {})
+
+obj_dir = output.get("object_dir", "obj")
+binary = output.get("binary")
+
+if not binary:
+    print("Error: output.binary is required.")
     sys.exit(1)
 
-except IsADirectoryError:
-    print("Error: SMake.toml is a directory, not a file.")
-    sys.exit(1)
 
-except OSError as e:
-    print(f"System error: {e}")
-    sys.exit(1)
+os.makedirs(obj_dir, exist_ok=True)
 
-
-# Ensure output dirs exist
-OBJ_DIR = CONFIG.get("output", {}).get("object_file_directory", "obj")
-BIN_PATH = CONFIG.get("output", {}).get("executable", "bin/a.out")
-
-os.makedirs(OBJ_DIR, exist_ok=True)
-os.makedirs(os.path.dirname(BIN_PATH), exist_ok=True)
+binary_dir = os.path.dirname(binary)
+if binary_dir:
+    os.makedirs(binary_dir, exist_ok=True)
 
 
-# Helpers
+def resolve(patterns):
+    files = []
+
+    for pattern in patterns:
+        files.extend(glob.glob(pattern, recursive=True))
+
+    return list(dict.fromkeys(files))
+
+
+def run(cmd, label=None):
+    if label:
+        print(label)
+
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError:
+        sys.exit(1)
+
+
+def object_path(source):
+    name = source.replace("\\", "_").replace("/", "_")
+    return os.path.join(obj_dir, f"{name}.o")
+
+
 def compile_c():
-    c = CONFIG.get("c")
-    if not c:
+    section = config.get("c")
+
+    if not section:
         return []
 
-    compiler = c.get("compiler", "gcc")
-    flags = c.get("flags", [])
-    sources = c.get("source_files", [])
+    compiler = section["compiler"]
+    flags = section.get("flags", [])
+    sources = resolve(section.get("source_files", []))
 
     objects = []
 
-    for src in sources:
-        obj = os.path.join(
-            OBJ_DIR,
-            os.path.basename(src).replace(".c", ".o")
+    for source in sources:
+        obj = object_path(source)
+
+        run(
+            [
+                compiler,
+                *flags,
+                "-c",
+                source,
+                "-o",
+                obj
+            ],
+            f"[C] {source}"
         )
 
-        cmd = [
-            compiler,
-            *flags,
-            "-c",
-            src,
-            "-o",
-            obj
-        ]
+        objects.append(obj)
 
-        subprocess.run(cmd, check=True)
+    return objects
+
+
+def compile_cpp():
+    section = config.get("cpp")
+
+    if not section:
+        return []
+
+    compiler = section["compiler"]
+    flags = section.get("flags", [])
+    sources = resolve(section.get("source_files", []))
+
+    objects = []
+
+    for source in sources:
+        obj = object_path(source)
+
+        run(
+            [
+                compiler,
+                *flags,
+                "-c",
+                source,
+                "-o",
+                obj
+            ],
+            f"[CPP] {source}"
+        )
+
         objects.append(obj)
 
     return objects
 
 
 def assemble():
-    asm = CONFIG.get("assembly")
-    if not asm:
+    section = config.get("asm")
+
+    if not section:
         return []
 
-    assembler = asm.get("assembler", "nasm")
-    flags = asm.get("flags", [])
-    sources = asm.get("source_files", [])
+    assembler = section["assembler"]
+    flags = section.get("flags", [])
+    sources = resolve(section.get("source_files", []))
 
     objects = []
 
-    for src in sources:
-        obj = os.path.join(
-            OBJ_DIR,
-            os.path.basename(src).replace(".asm", ".o")
+    for source in sources:
+        obj = object_path(source)
+
+        run(
+            [
+                assembler,
+                *flags,
+                source,
+                "-o",
+                obj
+            ],
+            f"[ASM] {source}"
         )
 
-        cmd = [
-            assembler,
-            *flags,
-            src,
-            "-o",
-            obj
-        ]
-
-        subprocess.run(cmd, check=True)
         objects.append(obj)
 
     return objects
 
 
 def link(objects):
-    linker = CONFIG.get("linker", {}).get("linker", "ld")
-    flags = CONFIG.get("linker", {}).get("flags", [])
+    if not objects:
+        print("Error: no source files found.")
+        sys.exit(1)
 
-    cmd = [
-        linker,
-        *flags,
-        *objects,
-        "-o",
-        BIN_PATH
-    ]
+    section = config.get("link")
 
-    subprocess.run(cmd, check=True)
+    if not section:
+        print("Error: missing [link] section.")
+        sys.exit(1)
+
+    linker = section["linker"]
+    flags = section.get("flags", [])
+
+    run(
+        [
+            linker,
+            *flags,
+            *objects,
+            "-o",
+            binary
+        ],
+        f"[LINK] {binary}"
+    )
 
 
-# Commands
 def build():
     objects = []
-    objects += compile_c()
-    objects += assemble()
+
+    objects.extend(compile_c())
+    objects.extend(compile_cpp())
+    objects.extend(assemble())
+
     link(objects)
 
 
-def run():
+def run_binary():
     build()
-    subprocess.run([BIN_PATH])
+    run([binary], f"[RUN] {binary}")
 
 
 def clean():
-    if os.path.exists(OBJ_DIR):
-        for f in os.listdir(OBJ_DIR):
-            os.remove(os.path.join(OBJ_DIR, f))
+    if os.path.isdir(obj_dir):
+        for root, _, files in os.walk(obj_dir):
+            for file in files:
+                os.remove(os.path.join(root, file))
 
-    if os.path.exists(BIN_PATH):
-        os.remove(BIN_PATH)
+    if os.path.exists(binary):
+        os.remove(binary)
+
+    print("[CLEAN]")
 
 
-# CLI
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else "build"
 
     if command == "build":
         build()
     elif command == "run":
-        run()
+        run_binary()
     elif command == "clean":
         clean()
     else:
