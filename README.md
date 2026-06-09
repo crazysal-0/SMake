@@ -1,6 +1,6 @@
 # SMake
 
-SMake is a simple build tool for C, C++, and Assembly projects. I just made it cause I didnt want to use CMake for my compiler, and Make is too old and doenst have good modern features.
+SMake is a simple build tool for C, C++, and Assembly projects. I just made it cause I didnt want to use CMake for my compiler, and Make is too old and doesn't have good modern features.
 
 ## Install
 
