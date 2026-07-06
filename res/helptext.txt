@@ -1,0 +1,7 @@
+Usage:
+    smake                Run default target
+    smake <target>       Run a target
+
+Options:
+    --help               Show this message
+    --version            Show version
