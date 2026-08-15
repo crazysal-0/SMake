@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/smake
+smake.so
+smake.dylib
+smake.dll
+libsmake.a
+smake.a
+smake.lib
+smake-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
