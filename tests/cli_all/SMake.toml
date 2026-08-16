@@ -1,0 +1,13 @@
+[languages.c]
+compiler = "cc"
+flags = ["-c"]
+
+[targets.app1]
+sources = ["main1.c"]
+output = "app1"
+linker = "cc"
+
+[targets.app2]
+sources = ["main2.c"]
+output = "app2"
+linker = "cc"
