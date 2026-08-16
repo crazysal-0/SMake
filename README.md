@@ -6,7 +6,7 @@ SMake is a simple open-source TOML-based make alternative written in D, mainly u
 
 ## Why it Exists
 
-Make is a very good build system, but it's a Turing-complete interpreter. If you would rather use something more simple and readable, **SMake** is for you because TOML is very simple and readable, compared to Bash, which Make is very similar to.
+Make is a very good build system, but it's a Turing-complete interpreter. If you would rather use something more simple and readable, **SMake** is for you because TOML is very simple and readable, compared to Bash, which Make is very similar to. It's so simple that the build system was written in only one file, the other files are tests and github stuff.
 
 ## Syntax
 
