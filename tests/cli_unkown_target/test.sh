@@ -6,7 +6,7 @@ SMake="$ROOT_DIR/bin/smake"
 
 cd "$TEST_DIR" || exit 1
 
-"$SMake" > /dev/null 2>&1
+"$SMake" definitely_not_a_target > /dev/null 2>&1
 
 if [ $? -eq 1 ]; then
     exit 0

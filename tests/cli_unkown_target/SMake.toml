@@ -1,0 +1,3 @@
+[languages.c]
+compiler = "cc"
+flags = ["-Wall", "-Wextra", "-c"]

@@ -1,4 +1,0 @@
-[c]
-compiler = "gcc"
-flags = ["-Wall", "-Wextra"]
-sourceFlag = "-c"

@@ -1,19 +1,24 @@
 import std.stdio;
 import std.file;
+import std.path;
+import std.process;
+import std.array;
 import std.typecons;
 import toml;
+
+enum VERSION = "0.1.0";
 
 struct Language
 {
     string compiler;
     string[] flags;
-    string sourceFlag;
 }
 
 struct Target
 {
     string[] sources;
     string output;
+    string linker;
 }
 
 struct Config
@@ -50,9 +55,6 @@ Nullable!Config readConfig(string filename)
                         lang.flags ~= flag.str;
                 }
 
-                if ("sourceFlag" in language)
-                    lang.sourceFlag = language["sourceFlag"].str;
-
                 config.languages[name] = lang;
             }
         }
@@ -76,6 +78,9 @@ Nullable!Config readConfig(string filename)
                 if ("output" in target)
                     t.output = target["output"].str;
 
+                if ("linker" in target)
+                    t.linker = target["linker"].str;
+
                 config.targets[name] = t;
             }
         }
@@ -88,17 +93,161 @@ Nullable!Config readConfig(string filename)
     }
 }
 
-int main()
+int buildTarget(Config config, Target target)
 {
-    auto config = readConfig("SMake.toml");
+    string[] objects;
 
-    if (config.isNull)
+    foreach (source; target.sources)
+    {
+        auto extension = std.path.extension(source);
+
+        if (extension.length > 0)
+            extension = extension[1 .. $];
+
+        if (extension !in config.languages)
+        {
+            stderr.writefln(
+                "error: no language configured for '%s' files",
+                extension
+            );
+            return 1;
+        }
+
+        auto language = config.languages[extension];
+        auto object = source.stripExtension ~ ".o";
+
+        string[] command;
+
+        command ~= language.compiler;
+        command ~= language.flags;
+        command ~= source;
+        command ~= "-o";
+        command ~= object;
+
+        writefln("[COMPILE] %s %s", language.compiler, source);
+
+        auto result = execute(command);
+
+        if (result.status != 0)
+        {
+            stderr.writefln("error: failed to compile %s", source);
+            return 1;
+        }
+
+        objects ~= object;
+    }
+
+    writefln("[LINK]    %s %s", target.linker, objects.join(" "));
+
+    string[] linkCommand;
+
+    linkCommand ~= target.linker;
+    linkCommand ~= objects;
+    linkCommand ~= "-o";
+    linkCommand ~= target.output;
+
+    auto linkResult = execute(linkCommand);
+
+    if (linkResult.status != 0)
+    {
+        stderr.writefln(
+            "error: failed to link %s",
+            target.output
+        );
+        return 1;
+    }
+
+    writeln("Built ", target.output, " successfully!");
+
+    return 0;
+}
+
+void printHelp()
+{
+    writeln("SMake - Simple Make");
+    writeln();
+    writeln("Usage:");
+    writeln("  smake <target>");
+    writeln("  smake all");
+    writeln("  smake clean");
+    writeln("  smake --help");
+    writeln("  smake --version");
+}
+
+void clean(Config config)
+{
+    foreach (target; config.targets.values)
+    {
+        if (exists(target.output))
+            remove(target.output);
+
+        foreach (source; target.sources)
+        {
+            auto object = source.stripExtension ~ ".o";
+
+            if (exists(object))
+                remove(object);
+        }
+    }
+
+    writeln("Cleaned build files.");
+}
+
+int main(string[] args)
+{
+    if (args.length < 2)
+    {
+        stderr.writefln("error: no target specified");
+        stderr.writefln("Try 'smake --help' for more information.");
+        return 1;
+    }
+
+    auto command = args[1];
+
+    if (command == "--help" || command == "-h")
+    {
+        printHelp();
+        return 0;
+    }
+
+    if (command == "--version" || command == "-v")
+    {
+        writeln("smake ", VERSION);
+        return 0;
+    }
+
+    auto configResult = readConfig("SMake.toml");
+
+    if (configResult.isNull)
     {
         stderr.writefln("error: couldn't find/read SMake.toml");
         return 1;
     }
 
-        
+    auto config = configResult.get;
 
-    return 0;
+    if (command == "clean")
+    {
+        clean(config);
+        return 0;
+    }
+
+    if (command == "all")
+    {
+        foreach (target; config.targets.values)
+        {
+            if (buildTarget(config, target) != 0)
+                return 1;
+        }
+
+        return 0;
+    }
+
+    if (command !in config.targets)
+    {
+        stderr.writefln("error: target '%s' not found", command);
+        return 1;
+    }
+
+    return buildTarget(config, config.targets[command]);
 }

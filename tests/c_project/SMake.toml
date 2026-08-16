@@ -1,0 +1,8 @@
+[languages.c]
+compiler = "cc"                    # beacuse not everyone has gcc or clang
+flags = ["-Wall", "-Wextra", "-c"]
+
+[targets.app]
+sources = ["main.c", "hello.c"]
+output = "app"
+linker = "gcc"

@@ -1,0 +1,12 @@
+[languages.c]
+compiler = "cc"
+flags = ["-Wall", "-Wextra", "-c"]
+
+[languages.asm]
+compiler = "nasm"
+flags = ["-f", "elf64"]
+
+[targets.app]
+sources = ["main.c", "answer.asm"]
+output = "app"
+linker = "cc"

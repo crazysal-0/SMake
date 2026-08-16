@@ -4,8 +4,6 @@ TEST_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$TEST_DIR/../.." && pwd)"
 SMake="$ROOT_DIR/bin/smake"
 
-cd "$TEST_DIR" || exit 1
-
 "$SMake" > /dev/null 2>&1
 
 if [ $? -eq 1 ]; then
