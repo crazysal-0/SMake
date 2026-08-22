@@ -3,7 +3,7 @@ docs.json
 __dummy.html
 docs/
 bin/
-/smake
+bin/smake
 smake.so
 smake.dylib
 smake.dll
