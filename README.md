@@ -60,8 +60,7 @@ linker = "cc"
 
 ## Install
 
-> **Note**: Currently SMake only works on linux, \
-> But a MacOS port is coming soon though
+> **Note**: Currently SMake only works on linux, but a MacOS port is coming soon though.
 
 Run this command:
 ```sh
