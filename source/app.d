@@ -212,7 +212,7 @@ int main(string[] args)
 
     if (command == "--version" || command == "-v")
     {
-        writeln("smake ", VERSION);
+        writeln(VERSION);
         return 0;
     }
 

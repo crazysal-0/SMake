@@ -1,0 +1,8 @@
+Package: smake
+Version: 0.1.0
+Section: devel
+Priority: optional
+Architecture: amd64
+Maintainer: Sam
+Description: Simple TOML-based build system
+ SMake is a simple TOML-based make alternative written in D.
