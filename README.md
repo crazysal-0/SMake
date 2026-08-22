@@ -60,7 +60,11 @@ linker = "cc"
 
 ## Install
 
-Clone the repository and use DUB to build it. Don't worry, though, because this will get put on APT soon.
+> **Note**: Currently, SMake only works on linux, \
+> But a MacOS port is coming soon though
+
+Run this command `curl -fsSL https://raw.githubusercontent.com/crazysal-0/SMake/master/install.sh | sh`
+This downloads and installs the latest release of SMake to ~/.local/bin.
 
 ## License
 
