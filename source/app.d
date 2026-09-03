@@ -6,7 +6,7 @@ import std.array;
 import std.typecons;
 import toml;
 
-enum VERSION = "SMake 0.1.0";
+enum VERSION = "SMake 0.1.1";
 
 struct Language
 {
