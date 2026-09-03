@@ -2,11 +2,7 @@
 compiler = "cc"
 flags = ["-Wall", "-Wextra", "-c"]
 
-[languages.asm]
-compiler = "nasm"
-flags = ["-f", "elf64"]
-
 [targets.app]
-sources = ["main.c", "math.asm"]
+sources = ["main.c"]
 output = "app"
 linker = "cc"
