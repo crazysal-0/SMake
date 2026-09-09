@@ -64,7 +64,7 @@ linker = "cc"
 
 Run this command:
 ```sh
-curl -fsSL https://raw.githubusercontent.com/crazysal-0/SMake/master/install.sh | sh.
+curl -fsSL https://raw.githubusercontent.com/crazysal-0/SMake/master/install.sh | sh
 ```
 This downloads and installs the latest release of SMake to ~/.local/bin.
 
