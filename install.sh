@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 INSTALL_DIR="$HOME/.local/bin"
 BINARY_NAME="smake"
 
